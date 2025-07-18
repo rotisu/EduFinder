@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xml:lang="es" lang="es"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Listado de Universidades</title>
+     <h:outputStylesheet library="css" name="diseñoDesarrollador.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+        <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+        <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+</h:head>
+<body>
+    <div class="sidebar">
+        <div class="profile">
+            <h3>Sistema Profesionales</h3>
+        </div>
+         <a href="inicioSesionUniversidad.xhtml">Universidades Perfil</a>
+            <a href="perfilDesarrollador.xhtml">Administrador Perfil</a>
+            <a href="inicioDesarrollador.xhtml">Profesionales Perfil</a>
+            <a href="plan de estudio.xhtml">Plan de Estado</a>
+            <a href="sobre nosotros.xhtml">Sobre Nosotros</a>
+            <a href="principal inicio.xhtml">Paguina Principal</a>
+            <a href="test.xhtml">Test</a>
+            <a href="universidades.xhtml">Universidades</a>
+            <a href="profesionales.xhtml">Profesionales</a>
+            <a href="servicio.xhtml">Servicios</a>
+            <h:form>
+                <h:commandLink value="Cerrar Sesión" action="#{login.cerrarSesion}" onclick="return confirm('¿Desea Cerrar Sesion?')" />
+            </h:form>
+    </div>
+    
+    <div class="content">
+        <div class="header">
+            <h1>Listado de Universidades</h1>
+            <div>
+                    <button class="btn btn-primary" onclick="openModal()">Agregar Universidad</button>
+                </div>
+        </div>
+        
+        <div class="profile-container">
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Filtrar por nombre, ubicación..." />
+                <button class="btn btn-primary" onclick="buscarUniversidades()">Buscar</button>
+              
+            </div>
+            
+            <table  border="1"  id="t-all" class="jsf-data-table display nowrap" width="100%" >
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre Institucion</th>
+                        <th>Ubicación</th>
+                        <th>Correo Institucional</th>
+                        <th>Usuario Encargado</th>
+                        <th>Fecha de Registro</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <ui:repeat value="#{controllerUniversity.listarUniversidades()}"  var="univer" >
+                    <tr>
+                        <td>#{univer.id}</td>
+                        <td>#{univer.nombreUniversidad}</td>
+                        <td>#{univer.ciudadId.nombre}</td>
+                        <td>#{univer.contactoEmail}</td>
+                        <td>#{univer.creadoPor.nombres}</td>
+                        <td>#{univer.fechaRegistro}</td>
+                        <td>
+                            <h:form id="formTabla">
+                                <h:commandButton value="Editar"  action="#{controllerUniversity.editarUniversidad(univer)}" >
+                                            <f:ajax execute="@this" render="modalForm" onevent="abrirModalSiCompletado" /></h:commandButton> 
+                                <h:commandButton value="Eliminar" onclick="return confirm('¿Desea Eliminar esta Institucion?')"  action="#{controllerUniversity.EliminarUniversidad(univer)}"/>                                    
+                           </h:form>
+                        </td>
+                    </tr>
+                    </ui:repeat>
+                </tbody>
+                
+            </table>
+        </div>
+    </div>
+    
+    <div id="modal" class="modal" style="display:none;">
+            <h:form id="modalForm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Editar y/o Agregar Universidad</h2>
+                        <span class="close" onclick="closeModal()">&times;</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nombre">Nombre Institucional</label>
+                        <h:inputText id="nombre" value="#{controllerUniversity.uni.nombreUniversidad}" required="true" />
+                    </div>
+                    <div class="form-group">
+                        <label for="creadopor">Creado Por</label>
+                        <h:selectOneMenu id="creadopor" value="#{controllerUniversity.idUsuarioSeleccionado}">
+                            <f:selectItem itemLabel="Seleccione Usuario Responsable" itemValue="" />
+                            <f:selectItems value="#{controllerDeUsuarios.listarUsuariosAdmin()}" />
+
+                        </h:selectOneMenu>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="especialidad">Ciudad:</label>
+                        <h:selectOneMenu id="especialidad" value="#{controllerUniversity.ciu.id}">
+                            <f:selectItem itemLabel="Seleccione una Ciudad" itemValue="" />
+                            <f:selectItems value="#{controllerUniversity.listarCiudades()}" />
+
+                        </h:selectOneMenu>
+                    </div>
+
+                   
+                    <div class="form-group">
+                        <label for="email">Correo Institucional:</label>
+                        <h:inputText id="email" value="#{controllerUniversity.uni.contactoEmail}" required="true" />
+                    </div>
+
+                    <div class="form-group">
+                        <label   style="display: none;" for="fecha">Fecha de Registro</label>
+                        <h:inputText style="display: none;" id="fecha" value="#{controllerUniversity.uni.fechaRegistro}" required="true" disabled="true" />
+                    </div>
+                    <h:messages globalOnly="true" style="color: red" />
+
+                    <div class="modal-actions">
+                        <h:commandButton value="Cancelar"
+                                         action="#{controllerDeUsuarios.cancelar()}"
+                                         onclick="closeModal()"
+                                         immediate="true"
+                                         styleClass="btns" />
+                        <h:commandButton value="Editar" action="#{controllerUniversity.actualizarUniversidades()}" onclick="return confirm('¿Esta Seguro de  Modificar la informacion de esta Institucion?')"  rendered="#{controllerUniversity.uni.nombreUniversidad != null}" class="btn btn-primary" />
+
+                        <h:commandButton value="Guardar" action="#{controllerUniversity.registrarUniversidades()}" rendered="#{controllerUniversity.uni.nombreUniversidad == null}" styleClass="btn btn-primary" />
+                    </div>
+                </div>
+            </h:form>
+        </div>
+    
+    <!-- Notificación -->
+    <div id="notification" class="notification"></div>
+    
+    <!-- Modo desarrollador -->
+    <div class="dev-mode">
+        Modo Desarrollador
+    </div>
+
+    <script>
+            let tablaUniversidade;
+
+            $(document).ready(function () {
+                tablaUniversidade = $('.jsf-data-table').DataTable({
+                    dom: 'Bfrtip',
+                    language: {
+                        url: "https://cdn.datatables.net/plug-ins/1.11.3/i18n/es_es.json"
+                    },
+                    pageLength: 50,
+                    buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+                });
+            });
+
+            // ✅ Esta función se llama al hacer clic en el botón "Buscar"
+            function buscarUniversidades() {
+                const valor = document.getElementById("search-input").value;    
+                tablaUniversidade.search(valor).draw(); // Aplica el filtro en la tabla
+
+                document.getElementById("search-input").addEventListener("keyup", function () {
+                    const valor = this.value;
+                    tablaUniversidade.search(valor).draw();
+                });
+            }
+        </script>
+    <script>
+
+            function openModal() {
+                document.getElementById('modal').style.display = 'block';
+                modal.style.display = 'block';
+                const content = modal.querySelector('.modal-content');
+                if (content)
+                    content.scrollTop = 0;
+            }
+
+            function abrirModalSiCompletado(data) {
+                if (data.status === 'success') {
+                    openModal(); // Tu función ya existente para mostrar el modal
+                }
+            }
+
+            // Cerrar modal
+            function closeModal() {
+                document.getElementById('modal').style.display = 'none';
+                const form = document.getElementById('modalForm');
+                if (form) {
+                    form.reset();
+                }
+            }
+
+            function togglePassword() {
+                const input = document.getElementById("modalForm:contraseña");
+                const icon = document.getElementById("iconoOjo");
+                if (input) {
+                    if (input.type === "password") {
+                        input.type = "text";
+                        icon.classList.remove("fa-eye");
+                        icon.classList.add("fa-eye-slash");
+                    } else {
+                        input.type = "password";
+                        icon.classList.remove("fa-eye-slash");
+                        icon.classList.add("fa-eye");
+                    }
+                }
+            }
+        </script>
+
+</body>
+</html>

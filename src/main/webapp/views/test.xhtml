@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"  
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xml:lang="es" lang="es"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>Test Vocacional Universitario</title>
+        <h:outputStylesheet library="css" name="diseñoTest.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    
+</h:head>
+<body>
+    <div class="container">
+        <div id="welcome" class="section active">
+            <h1>Test Vocacional Universitario</h1>
+            <p>Descubre las carreras que mejor se adaptan a tu perfil respondiendo algunas preguntas sobre tus intereses y habilidades.</p>
+            <button onclick="startTest()">Comenzar Test</button>
+        </div>
+
+        <div id="test" class="section">
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <div id="error-msg">Por favor selecciona una opción para continuar</div>
+            <div id="question-container"></div>
+            <button onclick="nextQuestion()" id="next-btn">Siguiente</button>
+        </div>
+
+        <div id="results" class="results" style="display:none;">
+            <h2>Resultados de tu Test Vocacional</h2>
+            <div id="career-matches"></div>
+            <div class="chart-container">
+                <canvas id="resultsChart"></canvas>
+            </div>
+            <div class="result-actions">
+                <button onclick="window.location.reload()">Repetir Test</button>
+                <button onclick="window.location.href='principal inicio.html'">Ir a Página Principal</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer-bottom">
+        <p>&copy; 2024 Edufinder, un futuro de aprendizaje.</p>
+        <div class="footer-section">
+            <h4>Contáctanos</h4>
+            <p>Edufinder@gmail.com</p>
+            <p>+57 3168377842</p>
+            <p>(601) 381-3000</p>
+            <p>Lunes a viernes de 8:00 a.m a 4:30 p.m</p>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        const questions = [
+            {
+                text: "¿Qué actividad disfrutas más?",
+                options: [
+                    {text: "Resolver problemas matemáticos", area: "ciencias"},
+                    {text: "Ayudar a otras personas", area: "social"},
+                    {text: "Crear arte o música", area: "arte"},
+                    {text: "Investigar y experimentar", area: "investigacion"}
+                ]
+            },
+            {
+                text: "¿Qué tipo de lectura prefieres?",
+                options: [
+                    {text: "Libros científicos", area: "ciencias"},
+                    {text: "Novelas y poesía", area: "arte"},
+                    {text: "Estudios sociales", area: "social"},
+                    {text: "Artículos de investigación", area: "investigacion"}
+                ]
+            },
+            {
+                text: "En un trabajo en equipo, prefieres:",
+                options: [
+                    {text: "Liderar y organizar", area: "social"},
+                    {text: "Analizar datos", area: "ciencias"},
+                    {text: "Aportar ideas creativas", area: "arte"},
+                    {text: "Investigar soluciones", area: "investigacion"}
+                ]
+            },
+            {
+                text: "¿Qué tipo de problemas te gusta resolver?",
+                options: [
+                    {text: "Problemas técnicos", area: "ciencias"},
+                    {text: "Problemas sociales", area: "social"},
+                    {text: "Desafíos creativos", area: "arte"},
+                    {text: "Misterios y enigmas", area: "investigacion"}
+                ]
+            },
+            {
+                text: "¿Qué ambiente de trabajo prefieres?",
+                options: [
+                    {text: "En campo", area: "ciencias"},
+                    {text: "Oficina con personas", area: "social"},
+                    {text: "Estudio creativo", area: "arte"},
+                    {text: "Biblioteca o centro de investigación", area: "investigacion"}
+                ]
+            }
+        ];
+
+        const careersByArea = {
+            ciencias: ["Ingeniería", "Matemáticas", "Física", "Informática"],
+            social: ["Psicología", "Trabajo Social", "Educación", "Sociología"],
+            arte: ["Bellas Artes", "Diseño Gráfico", "Música", "Arquitectura"],
+            investigacion: ["Biotecnología", "Investigación Científica", "Arqueología", "Química"]
+        };
+
+        let currentQuestion = 0;
+        let answers = {
+            ciencias: 0,
+            social: 0,
+            arte: 0,
+            investigacion: 0
+        };
+
+        function startTest() {
+            document.getElementById('welcome').classList.remove('active');
+            document.getElementById('test').classList.add('active');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            const container = document.getElementById('question-container');
+            const progress = document.getElementById('progress');
+            const errorMsg = document.getElementById('error-msg');
+            
+            progress.style.width = ((currentQuestion / questions.length) * 100) + "%";
+            errorMsg.style.display = 'none';
+
+            container.innerHTML = 
+                '<div class="question-card">' +
+                '<h3>' + question.text + '</h3>' +
+                '<div class="options">' +
+                question.options.map(function(option, index) {
+                    return '<label>' +
+                           '<input type="radio" name="q' + currentQuestion + '" value="' + option.area + '" /> ' +
+                           option.text +
+                           '</label>';
+                }).join('') +
+                '</div></div>';
+        }
+
+        function nextQuestion() {
+            const selected = document.querySelector('input[name="q' + currentQuestion + '"]:checked');
+            const errorMsg = document.getElementById('error-msg');
+            
+            if (!selected) {
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            answers[selected.value]++;
+            currentQuestion++;
+
+            if (currentQuestion >= questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('test').classList.remove('active');
+            const results = document.getElementById('results');
+            results.style.display = 'block';
+
+            const total = Object.values(answers).reduce(function(a, b) { return a + b; }, 0);
+            const percentages = {};
+            Object.keys(answers).forEach(function(area) {
+                percentages[area] = (answers[area] / total) * 100;
+            });
+
+            const matches = document.getElementById('career-matches');
+            matches.innerHTML = '';
+
+            Object.keys(percentages)
+                .sort(function(a, b) { return percentages[b] - percentages[a]; })
+                .forEach(function(area) {
+                    const careers = careersByArea[area];
+                    matches.innerHTML +=
+                        '<div class="career-match">' +
+                        '<h3>' + getAreaIcon(area) + ' ' + getAreaName(area) +
+                        ' <span class="percentage">' + percentages[area].toFixed(1) + '%</span></h3>' +
+                        '<p>Carreras recomendadas: ' + careers.join(', ') + '</p>' +
+                        '</div>';
+                });
+
+            createChart(percentages);
+        }
+
+        function getAreaIcon(area) {
+            const icons = {
+                ciencias: '🔬',
+                social: '👥',
+                arte: '🎨',
+                investigacion: '🔍'
+            };
+            return icons[area];
+        }
+
+        function getAreaName(area) {
+            const names = {
+                ciencias: 'Ciencias y Tecnología',
+                social: 'Ciencias Sociales',
+                arte: 'Artes y Humanidades',
+                investigacion: 'Investigación y Análisis'
+            };
+            return names[area];
+        }
+
+        function createChart(percentages) {
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(percentages).map(getAreaName),
+                    datasets: [{
+                        label: 'Tus Intereses',
+                        data: Object.values(percentages),
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        borderColor: '#3498db',
+                        pointBackgroundColor: '#3498db',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    family: "'Arial', sans-serif"
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: {
+                                font: {
+                                    family: "'Arial', sans-serif"
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
